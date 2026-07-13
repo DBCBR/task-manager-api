@@ -36,3 +36,39 @@ def get_task_by_id(task_id: int, db: Session = Depends(get_db)):
             detail=f"Task com id {task_id} não encontrada."
         )
     return task
+
+@router.put("/{task_id}", response_model=TaskResponse)
+def update_task(task_id: int, task_input: TaskUpdate, db: Session = Depends(get_db)):
+    """Atualiza uma tarefa existente com os dados fornecidos. Retorna 404 se não for encontrada."""
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"Task com id {task_id} não encontrada."
+        )
+    
+    # Atualiza os campos da tarefa com os dados fornecidos
+    if task_input.title is not None:
+        task.title = task_input.title
+    if task_input.description is not None:
+        task.description = task_input.description
+    if task_input.is_completed is not None:
+        task.is_completed = task_input.is_completed
+
+    db.commit()
+    db.refresh(task)
+    return task
+
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    """Deleta uma tarefa específica pelo ID. Retorna 404 se não for encontrada."""
+    task = db.query(TaskModel).filter(TaskModel.id == task_id).first()
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f"Task com id {task_id} não encontrada."
+        )
+    
+    db.delete(task)
+    db.commit()
+    return None
