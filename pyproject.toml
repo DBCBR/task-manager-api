@@ -33,3 +33,15 @@ dev = [
     "black (>=26.5.1,<27.0.0)",
     "flake8 (>=7.3.0,<8.0.0)"
 ]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "*"
+uvicorn = "*"
+sqlalchemy = "*"
+psycopg2-binary = "*"
+bcrypt = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
+pydantic = {extras = ["email"], version = "*"}
+email-validator = "*"
+pydantic-settings = "*"
