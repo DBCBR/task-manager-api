@@ -6,7 +6,7 @@ authors = [
     {name = "DBCBR",email = "dbcbr@hotmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi (>=0.139.0,<0.140.0)",
     "uvicorn (>=0.51.0,<0.52.0)",
