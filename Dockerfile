@@ -10,8 +10,10 @@ RUN pip install poetry
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml ./
 RUN poetry config virtualenvs.create false \
+    && pip install email-validator python-multipart \
+    && poetry lock \
     && poetry install --no-interaction --no-ansi --no-root
 
 # Estágio 2: Execução
