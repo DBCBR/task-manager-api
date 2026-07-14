@@ -35,7 +35,7 @@ git clone https://github.com/DBCBR/task-manager-api.git
 cd task-manager-api
 
 # Inicie os serviços com Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # A API estará disponível em: http://localhost:8000
 # Swagger documentação: http://localhost:8000/docs
@@ -58,13 +58,13 @@ venv\Scripts\activate
 source venv/bin/activate
 
 # Instale as dependências
-pip install -e ".[dev]"
+poetry install
 
 # Configure as variáveis de ambiente
-cp .env.example .env
+copy .env.example .env
 
 # Inicie o servidor
-uvicorn src.main:app --reload
+poetry run uvicorn src.main:app --reload
 ```
 
 ## 📋 Configuração
@@ -88,6 +88,21 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 ⚠️ **IMPORTANTE**: Altere o `SECRET_KEY` em produção com uma chave segura e única!
+
+### Migrações com Alembic
+
+O projeto usa Alembic para versionar o schema do banco.
+
+```bash
+# Criar uma nova migração a partir dos modelos
+poetry run alembic revision --autogenerate -m "descricao_da_mudanca"
+
+# Aplicar as migrações
+poetry run alembic upgrade head
+
+# Reverter uma migração
+poetry run alembic downgrade -1
+```
 
 ## 📚 Estrutura do Projeto
 
@@ -181,18 +196,15 @@ curl -X POST http://localhost:8000/tasks \
 Execute os testes automatizados:
 
 ```bash
-# Instale as dependências de desenvolvimento
-pip install -e ".[dev]"
+# Instale as dependências
+poetry install
 
 # Execute todos os testes
-pytest
-
-# Execute com cobertura
-pytest --cov=src
+poetry run pytest
 
 # Execute testes específicos
-pytest tests/test_auth.py -v
-pytest tests/test_tasks.py -v
+poetry run pytest tests/test_auth.py -v
+poetry run pytest tests/test_tasks.py -v
 ```
 
 ## 🐳 Docker
@@ -207,26 +219,26 @@ docker build -t task-manager-api:latest .
 
 ```bash
 # Iniciar serviços
-docker-compose up -d
+docker compose up -d
 
 # Visualizar logs
-docker-compose logs -f web
+docker compose logs -f web
 
 # Parar serviços
-docker-compose down
+docker compose down
 
 # Remover volumes (dados)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Acessar o Container
 
 ```bash
 # Acessar shell do container da API
-docker-compose exec web bash
+docker compose exec web sh
 
 # Acessar shell do banco de dados
-docker-compose exec db psql -U postgres -d taskdb
+docker compose exec db psql -U postgres -d taskdb
 ```
 
 ## 🔐 Segurança
@@ -299,7 +311,7 @@ A documentação interativa está disponível em:
 
 ```bash
 # Verificar se o PostgreSQL está rodando
-docker-compose logs db
+docker compose logs db
 
 # Verificar credenciais em .env
 # Padrão: postgresql+psycopg2://postgres:postgres@db:5432/taskdb
@@ -309,17 +321,14 @@ docker-compose logs db
 
 ```bash
 # Mudar porta no docker-compose.yml ou
-docker-compose up -d -p 8001:8000
+docker compose up -d -p 8001:8000
 ```
 
 ### Erro ao Instalar Dependências
 
 ```bash
-# Limpar cache pip
-pip cache purge
-
 # Reinstalar dependências
-pip install --upgrade --force-reinstall -e ".[dev]"
+poetry install --sync
 ```
 
 ## 📝 Contribuindo
