@@ -1,13 +1,11 @@
-from fastapi import FastAPI, Depends  # <-- Adicione o Depends aqui nos imports
+from fastapi import FastAPI
 from src.config import settings
 from src.database import Base, engine 
 from src.routers import task, auth
 
-# Importe o esquema de segurança para o arquivo principal
-from src.security.auth import oauth2_scheme  # <-- ADICIONE ESTE IMPORT
-
-# ... configuração dos modelos e tabelas ...
-Base.metadata.create_all(bind=engine)
+# Importante: importar os modelos antes do create_all para mapear as tabelas
+from src.models.task import TaskModel
+from src.models.user import UserModel
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -18,8 +16,6 @@ app.include_router(auth.router)
 app.include_router(task.router)
 
 @app.get("/healthcheck", tags=["Infrastructure"])
-# Adicionamos aqui apenas para o Swagger "saber" que o esquema existe na API inteira, 
-# mas usando None para não bloquear a resposta do monitoramento.
-def health_check(token: str = Depends(oauth2_scheme)):  
+def health_check():
     """Rota para sistemas de monitoramento testarem se a API está online."""
     return {"status": "healthy", "version": settings.PROJECT_VERSION}
