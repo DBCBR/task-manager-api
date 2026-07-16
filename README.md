@@ -11,6 +11,9 @@ Uma API RESTful robusta e segura para gerenciar tarefas com autenticação basea
 
 - ✅ **Autenticação JWT** - Autenticação segura com tokens JWT
 - 📝 **Gerenciamento de Tarefas** - Criar, ler, atualizar e deletar tarefas
+- 🏷️ **Prioridades e Vencimento** - Tarefas com prioridade, data de vencimento e validação de prazo
+- 🔎 **Filtros de Consulta** - Busca por status, prioridade, texto e tarefas atrasadas
+- 📈 **Estatísticas de Tarefas** - Endpoint dedicado com métricas do painel
 - 👤 **Gerenciamento de Usuários** - Registro e autenticação de usuários
 - 🔒 **Isolamento de Dados** - Cada usuário só acessa suas próprias tarefas
 - 🗂️ **ORM com SQLAlchemy** - Mapeamento objeto-relacional eficiente
@@ -167,7 +170,8 @@ curl -X POST http://localhost:8000/auth/login \
 
 | Método | Endpoint | Descrição | Autenticação |
 |--------|----------|-----------|:-------------:|
-| `GET` | `/tasks` | Listar todas as tarefas do usuário | ✅ |
+| `GET` | `/tasks` | Listar tarefas do usuário com paginação e filtros | ✅ |
+| `GET` | `/tasks/stats` | Retornar estatísticas das tarefas do usuário | ✅ |
 | `POST` | `/tasks` | Criar nova tarefa | ✅ |
 | `GET` | `/tasks/{id}` | Obter detalhes de uma tarefa | ✅ |
 | `PUT` | `/tasks/{id}` | Atualizar uma tarefa | ✅ |
@@ -181,9 +185,32 @@ curl -X POST http://localhost:8000/tasks \
   -d '{
     "title": "Implementar novo recurso",
     "description": "Adicionar autenticação OAuth2",
-    "is_completed": false
+    "due_date": "2026-07-20T18:00:00Z",
+    "priority": "high"
   }'
 ```
+
+**Filtros disponíveis em `GET /tasks`:**
+
+- `status=pending|in_progress|completed`
+- `priority=low|medium|high`
+- `search=termo` para buscar em título e descrição
+- `overdue=true` para retornar apenas tarefas atrasadas
+- `skip` e `limit` para paginação
+
+**Exemplo - Listar apenas tarefas em progresso e prioridade alta:**
+```bash
+curl -X GET "http://localhost:8000/tasks?status=in_progress&priority=high" \
+  -H "Authorization: Bearer SEU_TOKEN_JWT"
+```
+
+**Exemplo - Consultar estatísticas:**
+```bash
+curl -X GET http://localhost:8000/tasks/stats \
+  -H "Authorization: Bearer SEU_TOKEN_JWT"
+```
+
+As tarefas utilizam os status `pending`, `in_progress` e `completed`, e as prioridades `low`, `medium` e `high`. Ao criar ou atualizar uma tarefa, a data de vencimento não pode estar no passado, com tolerância de 15 minutos.
 
 ### Infraestrutura
 
