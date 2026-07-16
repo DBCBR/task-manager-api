@@ -1,27 +1,74 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from enum import Enum
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
+from datetime import datetime, timezone
 
-# Schema Base
+class TaskStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+
+# 1. Adicionamos o Enum de Prioridades
+class TaskPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
 class TaskBase(BaseModel):
-    title: str = Field(..., min_length=3, max_length=100, description="Título da tarefa")
-    description: Optional[str] = Field(None, max_length=500, description="Descrição detalhada")
+    title: str
+    description: Optional[str] = None
+    due_date: Optional[datetime] = None
+    priority: TaskPriority = TaskPriority.LOW  # <-- Prioridade padrão na criação
 
-# Schema de Entrada (Criação) - Verifique o nome exato da classe abaixo:
 class TaskCreate(TaskBase):
-    pass
+    @field_validator("due_date")
+    @classmethod
+    def validar_data_vencimento(cls, valor: Optional[datetime]) -> Optional[datetime]:
+        if valor is not None:
+            if valor.tzinfo is None:
+                valor = valor.replace(tzinfo=timezone.utc)
+            
+            # Obtém o agora em UTC e subtrai 15 minutos de tolerância para cobrir delays de rede/digitação
+            from datetime import timedelta
+            limite_tolerancia = datetime.now(timezone.utc) - timedelta(minutes=15)
+            
+            if valor < limite_tolerancia:
+                raise ValueError("A data de vencimento nao pode ser no passado (tolerancia de 15 min).")
+        return valor
 
-# Schema de Atualização - Verifique o nome exato da classe abaixo:
 class TaskUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=3, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    is_completed: Optional[bool] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[TaskStatus] = None
+    due_date: Optional[datetime] = None
+    priority: Optional[TaskPriority] = None
 
-# Schema de Saída - Verifique o nome exato da classe abaixo:
+    @field_validator("due_date")
+    @classmethod
+    def validar_data_vencimento(cls, valor: Optional[datetime]) -> Optional[datetime]:
+        if valor is not None:
+            if valor.tzinfo is None:
+                valor = valor.replace(tzinfo=timezone.utc)
+                
+            from datetime import timedelta
+            limite_tolerancia = datetime.now(timezone.utc) - timedelta(minutes=15)
+            
+            if valor < limite_tolerancia:
+                raise ValueError("A data de vencimento nao pode ser no passado (tolerancia de 15 min).")
+        return valor
+
 class TaskResponse(TaskBase):
     id: int
-    is_completed: bool
+    status: TaskStatus
+    priority: TaskPriority  # <-- Retorna a prioridade no output
+    user_id: int
     created_at: datetime
-    updated_at: Optional[datetime] = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
+    
+class TaskStatsResponse(BaseModel):
+    total_tasks: int
+    pending_count: int
+    in_progress_count: int
+    completed_count: int
+    completion_percentage: float

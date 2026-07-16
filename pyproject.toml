@@ -47,3 +47,11 @@ email-validator = "*"
 python-multipart = "*"
 pydantic-settings = "*"
 alembic = "*"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::Warning:fastapi.*",
+    "ignore::Warning:starlette.*"
+]
